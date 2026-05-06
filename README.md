@@ -9,6 +9,7 @@ No accounts, no cloud, no notifications. One Docker container, one SQLite file.
 ## Features
 
 - **Recurring daily checklist** — one template list, auto-resets every day at local midnight.
+- **One-off tasks** — add ad-hoc tasks that stay on the Today page until completed, then move to a separate "Done" history page.
 - **History** — view any past date's completions read-only.
 - **Multi-device access** — run on one host (NAS, home server, spare laptop); reach it from phone, tablet, or any laptop on the same network.
 - **Persistent storage** — SQLite file in a bind-mounted `./data` directory. Survives container rebuilds.
@@ -48,7 +49,7 @@ No accounts, no cloud, no notifications. One Docker container, one SQLite file.
 
 ## Data Model
 
-Two tables. The template list is what you maintain; completions record what got checked on which day.
+Three tables. Templates + completions cover the recurring daily list. `one_off_task` covers ad-hoc tasks that aren't tied to a date.
 
 ### `task_template`
 
@@ -71,6 +72,17 @@ Two tables. The template list is what you maintain; completions record what got 
 | **UNIQUE**    | (`template_id`, `date`)               |
 
 **Soft-delete rationale:** if you delete a template later, history pages would lose the task name. Marking `active=false` keeps history readable while removing the task from today's list.
+
+### `one_off_task`
+
+| Column         | Type       | Notes                                          |
+|----------------|------------|------------------------------------------------|
+| `id`           | INTEGER PK | autoincrement                                  |
+| `name`         | TEXT       | not null                                       |
+| `completed_at` | TIMESTAMP  | nullable; `NULL` = pending, visible on Today   |
+| `created_at`   | TIMESTAMP  | UTC                                            |
+
+One-offs are not tied to a date. They appear on `/` until marked complete, then surface on `/one-offs/history` (newest-completed first) where they can be restored or deleted.
 
 ---
 
@@ -97,6 +109,11 @@ The "local" timezone is set by the `TZ` environment variable (default `UTC`).
 | PATCH  | `/templates/{id}`                   | updated row partial    |
 | DELETE | `/templates/{id}`                   | empty (soft-deletes)   |
 | GET    | `/history?date=YYYY-MM-DD`          | read-only past day     |
+| POST   | `/one-offs`                         | create one-off (form `name`) |
+| POST   | `/one-offs/{id}/complete`           | mark one-off done; row swaps out |
+| POST   | `/one-offs/{id}/restore`            | clear `completed_at` (from Done page) |
+| DELETE | `/one-offs/{id}`                    | hard delete one-off     |
+| GET    | `/one-offs/history`                 | completed one-offs (Done page) |
 | GET    | `/healthz`                          | `{"status":"ok"}`      |
 
 `POST /tasks/{id}/toggle` inserts a completion row if absent, deletes if present. HTMX swaps the row in place — no full page reload.

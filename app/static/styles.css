@@ -74,6 +74,108 @@ main {
     padding: 2rem 0;
 }
 
+.empty.subtle {
+    padding: 0.75rem 0;
+    font-size: 0.9rem;
+}
+
+.section { margin-top: 1.75rem; }
+.section:first-of-type { margin-top: 0; }
+
+.section-title {
+    font-size: 0.8rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    color: var(--muted);
+    margin: 0 0 0.625rem 0.125rem;
+}
+
+button.ghost {
+    background: transparent;
+    color: var(--accent);
+    border: 1px solid var(--border);
+    padding: 0.25rem 0.625rem;
+    border-radius: 0.375rem;
+    cursor: pointer;
+    font-size: 0.85rem;
+}
+
+button.ghost:hover {
+    background: var(--bg);
+}
+
+.search-form {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    margin-bottom: 0.75rem;
+}
+
+.search-form input[type=search] {
+    flex: 1;
+    padding: 0.5rem 0.75rem;
+    font-size: 0.95rem;
+    border: 1px solid var(--border);
+    border-radius: 0.375rem;
+    background: var(--card);
+    color: var(--fg);
+}
+
+.search-form input[type=search]:focus {
+    outline: 2px solid var(--accent);
+    outline-offset: 1px;
+    border-color: var(--accent);
+}
+
+.ghost-link {
+    color: var(--muted);
+    font-size: 0.85rem;
+    text-decoration: none;
+    padding: 0.375rem 0.5rem;
+    border-radius: 0.25rem;
+}
+
+.ghost-link:hover {
+    color: var(--fg);
+    background: var(--bg);
+}
+
+.pager {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.75rem;
+    margin-top: 1rem;
+    flex-wrap: wrap;
+}
+
+.pager-btn {
+    color: var(--accent);
+    text-decoration: none;
+    font-weight: 500;
+    padding: 0.375rem 0.75rem;
+    border: 1px solid var(--border);
+    border-radius: 0.375rem;
+    background: var(--card);
+    font-size: 0.9rem;
+}
+
+.pager-btn:hover {
+    background: var(--bg);
+}
+
+.pager-btn.disabled {
+    color: var(--muted);
+    cursor: not-allowed;
+    opacity: 0.5;
+}
+
+.pager-status {
+    color: var(--muted);
+    font-size: 0.85rem;
+}
+
 ul.checklist, ul.template-list {
     list-style: none;
     padding: 0;

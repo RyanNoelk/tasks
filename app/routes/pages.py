@@ -13,13 +13,25 @@ router = APIRouter()
 
 
 @router.get("/", response_class=HTMLResponse)
-def index(request: Request, session: Session = Depends(get_session)) -> HTMLResponse:
+def index(
+    request: Request,
+    q: str | None = None,
+    page: int = 1,
+    session: Session = Depends(get_session),
+) -> HTMLResponse:
     on_date = today_local()
     items = services.checklist_for(session, on_date, include_inactive=False)
+    one_offs = services.list_pending_one_offs(session, q=q, page=page)
     return templates.TemplateResponse(
         request,
         "index.html",
-        {"items": items, "on_date": on_date, "is_today": True},
+        {
+            "items": items,
+            "on_date": on_date,
+            "is_today": True,
+            "one_offs": one_offs,
+            "q": q or "",
+        },
     )
 
 
@@ -57,6 +69,21 @@ def history(
             "prev_date": prev_date,
             "next_date": next_date,
         },
+    )
+
+
+@router.get("/one-offs/history", response_class=HTMLResponse)
+def one_off_history(
+    request: Request,
+    q: str | None = None,
+    page: int = 1,
+    session: Session = Depends(get_session),
+) -> HTMLResponse:
+    tasks = services.list_completed_one_offs(session, q=q, page=page)
+    return templates.TemplateResponse(
+        request,
+        "one_off_history.html",
+        {"tasks": tasks, "q": q or ""},
     )
 
 

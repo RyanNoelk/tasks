@@ -1,0 +1,45 @@
+<li id="one-off-row-{{ task.id }}"
+    class="task-row one-off{% if task.completed_at %} completed{% endif %}">
+    {% if view == 'today' %}
+    <form
+        hx-post="/one-offs/{{ task.id }}/complete"
+        hx-target="#one-off-row-{{ task.id }}"
+        hx-swap="outerHTML">
+        <button type="submit" class="toggle" aria-label="Mark complete">
+            {% if task.completed_at %}&#x2611;{% else %}&#x2610;{% endif %}
+        </button>
+    </form>
+    <span class="name">{{ task.name }}</span>
+    <button
+        type="button"
+        class="danger"
+        hx-delete="/one-offs/{{ task.id }}"
+        hx-target="#one-off-row-{{ task.id }}"
+        hx-swap="outerHTML"
+        hx-confirm="Delete '{{ task.name }}'?">
+        Delete
+    </button>
+    {% else %}
+    <span class="toggle static" aria-hidden="true">&#x2611;</span>
+    <span class="name">{{ task.name }}</span>
+    {% if task.completed_at %}
+    <span class="status muted">{{ task.completed_at.strftime('%Y-%m-%d') }}</span>
+    {% endif %}
+    <form
+        hx-post="/one-offs/{{ task.id }}/restore"
+        hx-target="#one-off-row-{{ task.id }}"
+        hx-swap="outerHTML"
+        style="display:inline">
+        <button type="submit" class="ghost" aria-label="Restore">Restore</button>
+    </form>
+    <button
+        type="button"
+        class="danger"
+        hx-delete="/one-offs/{{ task.id }}"
+        hx-target="#one-off-row-{{ task.id }}"
+        hx-swap="outerHTML"
+        hx-confirm="Delete '{{ task.name }}'?">
+        Delete
+    </button>
+    {% endif %}
+</li>

@@ -1,0 +1,30 @@
+{% extends "base.html" %}
+{% block title %}Done — Daily Tasks{% endblock %}
+{% block content %}
+<header class="page-header">
+    <h1>Done</h1>
+    <p class="subtitle">Completed one-off tasks (newest first).</p>
+</header>
+
+<form method="get" action="/one-offs/history" class="search-form">
+    <input type="search" name="q" value="{{ q }}" placeholder="Search completed one-offs" autocomplete="off">
+    {% if q %}<a class="ghost-link" href="/one-offs/history">Clear</a>{% endif %}
+</form>
+
+{% if not tasks.items %}
+<p class="empty">
+    {% if q %}No matches for &ldquo;{{ q }}&rdquo;.{% else %}Nothing completed yet.{% endif %}
+</p>
+{% else %}
+<ul id="one-off-list" class="checklist">
+    {% set view = 'history' %}
+    {% for task in tasks.items %}
+        {% include "partials/one_off_row.html" %}
+    {% endfor %}
+</ul>
+{% endif %}
+
+{% with page=tasks, base_path='/one-offs/history', q=q %}
+    {% include "partials/pager.html" %}
+{% endwith %}
+{% endblock %}

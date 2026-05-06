@@ -1,10 +1,14 @@
 from dataclasses import dataclass
-from datetime import date
+from datetime import date, datetime, timezone
 
 from sqlalchemy import func, select
 from sqlalchemy.orm import Session
 
-from app.models import TaskCompletion, TaskTemplate
+from app.models import OneOffTask, TaskCompletion, TaskTemplate
+
+
+def _utcnow() -> datetime:
+    return datetime.now(timezone.utc)
 
 
 @dataclass
@@ -126,3 +130,130 @@ def toggle_completion(session: Session, template_id: int, on_date: date) -> Chec
         completed = False
 
     return ChecklistItem(template_id=tmpl.id, name=tmpl.name, completed=completed, date=on_date)
+
+
+# ── One-off tasks ────────────────────────────────────────
+
+
+@dataclass
+class OneOffPage:
+    items: list[OneOffTask]
+    total: int
+    page: int
+    page_size: int
+
+    @property
+    def total_pages(self) -> int:
+        if self.total == 0:
+            return 1
+        return (self.total + self.page_size - 1) // self.page_size
+
+    @property
+    def has_prev(self) -> bool:
+        return self.page > 1
+
+    @property
+    def has_next(self) -> bool:
+        return self.page < self.total_pages
+
+
+def _paginate_one_offs(
+    session: Session,
+    base_filter,
+    order_by,
+    *,
+    q: str | None,
+    page: int,
+    page_size: int,
+) -> OneOffPage:
+    page = max(1, page)
+    page_size = max(1, min(200, page_size))
+
+    where = [base_filter]
+    if q:
+        where.append(OneOffTask.name.ilike(f"%{q.strip()}%"))
+
+    total = session.scalar(
+        select(func.count(OneOffTask.id)).where(*where)
+    ) or 0
+
+    stmt = (
+        select(OneOffTask)
+        .where(*where)
+        .order_by(*order_by)
+        .offset((page - 1) * page_size)
+        .limit(page_size)
+    )
+    items = list(session.scalars(stmt))
+    return OneOffPage(items=items, total=total, page=page, page_size=page_size)
+
+
+def list_pending_one_offs(
+    session: Session,
+    *,
+    q: str | None = None,
+    page: int = 1,
+    page_size: int = 25,
+) -> OneOffPage:
+    return _paginate_one_offs(
+        session,
+        OneOffTask.completed_at.is_(None),
+        (OneOffTask.created_at, OneOffTask.id),
+        q=q,
+        page=page,
+        page_size=page_size,
+    )
+
+
+def list_completed_one_offs(
+    session: Session,
+    *,
+    q: str | None = None,
+    page: int = 1,
+    page_size: int = 25,
+) -> OneOffPage:
+    return _paginate_one_offs(
+        session,
+        OneOffTask.completed_at.is_not(None),
+        (OneOffTask.completed_at.desc(), OneOffTask.id.desc()),
+        q=q,
+        page=page,
+        page_size=page_size,
+    )
+
+
+def create_one_off(session: Session, name: str) -> OneOffTask:
+    task = OneOffTask(name=name.strip())
+    session.add(task)
+    session.commit()
+    session.refresh(task)
+    return task
+
+
+def complete_one_off(session: Session, task_id: int) -> OneOffTask | None:
+    task = session.get(OneOffTask, task_id)
+    if task is None:
+        return None
+    task.completed_at = _utcnow()
+    session.commit()
+    session.refresh(task)
+    return task
+
+
+def restore_one_off(session: Session, task_id: int) -> OneOffTask | None:
+    task = session.get(OneOffTask, task_id)
+    if task is None:
+        return None
+    task.completed_at = None
+    session.commit()
+    session.refresh(task)
+    return task
+
+
+def delete_one_off(session: Session, task_id: int) -> bool:
+    task = session.get(OneOffTask, task_id)
+    if task is None:
+        return False
+    session.delete(task)
+    session.commit()
+    return True
