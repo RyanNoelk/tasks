@@ -9,10 +9,17 @@
 </head>
 <body>
     <nav class="topnav">
-        <a href="/">Today</a>
-        <a href="/manage">Manage</a>
-        <a href="/history">History</a>
-        <a href="/one-offs/history">Done</a>
+        <a class="brand" href="/">Daily Tasks</a>
+        <input type="checkbox" id="nav-toggle" class="nav-toggle">
+        <label for="nav-toggle" class="nav-burger" aria-label="Toggle menu">&#9776;</label>
+        <div class="nav-links">
+            <span class="nav-group">Daily Tasks</span>
+            <a href="/manage">Manage</a>
+            <a href="/history">History</a>
+            <span class="nav-sep" aria-hidden="true"></span>
+            <span class="nav-group">One-off Tasks</span>
+            <a href="/one-offs/history">Completed</a>
+        </div>
     </nav>
     <main>
         {% block content %}{% endblock %}

@@ -2,8 +2,7 @@
 {% block title %}Today — Daily Tasks{% endblock %}
 {% block content %}
 <header class="page-header">
-    <h1>Today</h1>
-    <p class="subtitle">{{ on_date.isoformat() }}</p>
+    <h1>{{ on_date.strftime('%A, %B %-d') }}</h1>
 </header>
 
 <section class="section">
@@ -34,11 +33,6 @@
         <button type="submit">Add</button>
     </form>
 
-    <form method="get" action="/" class="search-form">
-        <input type="search" name="q" value="{{ q }}" placeholder="Search pending one-offs" autocomplete="off">
-        {% if q %}<a class="ghost-link" href="/">Clear</a>{% endif %}
-    </form>
-
     <ul id="one-off-list" class="checklist">
         {% set view = 'today' %}
         {% for task in one_offs.items %}
@@ -46,12 +40,10 @@
         {% endfor %}
     </ul>
     {% if not one_offs.items %}
-    <p class="empty subtle">
-        {% if q %}No matches for &ldquo;{{ q }}&rdquo;.{% else %}No pending one-offs.{% endif %}
-    </p>
+    <p class="empty subtle">No pending one-offs.</p>
     {% endif %}
 
-    {% with page=one_offs, base_path='/', q=q %}
+    {% with page=one_offs, base_path='/', q='' %}
         {% include "partials/pager.html" %}
     {% endwith %}
 </section>

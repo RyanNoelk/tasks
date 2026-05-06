@@ -17,6 +17,7 @@ class ChecklistItem:
     name: str
     completed: bool
     date: date
+    completed_at: datetime | None = None
 
 
 def list_active_templates(session: Session) -> list[TaskTemplate]:
@@ -80,13 +81,20 @@ def checklist_for(session: Session, on_date: date, *, include_inactive: bool = F
     For today's view, filter to active templates only. For history, include inactive
     templates that have a completion row for that date so old data still renders.
     """
-    completed_ids_stmt = select(TaskCompletion.template_id).where(TaskCompletion.date == on_date)
-    completed_ids: set[int] = set(session.scalars(completed_ids_stmt))
+    completions_stmt = select(
+        TaskCompletion.template_id, TaskCompletion.completed_at
+    ).where(TaskCompletion.date == on_date)
+    completion_times: dict[int, datetime] = {
+        tid: ts for tid, ts in session.execute(completions_stmt)
+    }
 
     if include_inactive:
         stmt = (
             select(TaskTemplate)
-            .where((TaskTemplate.active.is_(True)) | (TaskTemplate.id.in_(completed_ids)))
+            .where(
+                (TaskTemplate.active.is_(True))
+                | (TaskTemplate.id.in_(completion_times.keys()))
+            )
             .order_by(TaskTemplate.position, TaskTemplate.id)
         )
     else:
@@ -101,8 +109,9 @@ def checklist_for(session: Session, on_date: date, *, include_inactive: bool = F
         ChecklistItem(
             template_id=t.id,
             name=t.name,
-            completed=t.id in completed_ids,
+            completed=t.id in completion_times,
             date=on_date,
+            completed_at=completion_times.get(t.id),
         )
         for t in templates
     ]
@@ -121,15 +130,24 @@ def toggle_completion(session: Session, template_id: int, on_date: date) -> Chec
         )
     )
     if existing is None:
-        session.add(TaskCompletion(template_id=template_id, date=on_date))
+        ts = _utcnow()
+        session.add(TaskCompletion(template_id=template_id, date=on_date, completed_at=ts))
         session.commit()
         completed = True
+        completed_at = ts
     else:
         session.delete(existing)
         session.commit()
         completed = False
+        completed_at = None
 
-    return ChecklistItem(template_id=tmpl.id, name=tmpl.name, completed=completed, date=on_date)
+    return ChecklistItem(
+        template_id=tmpl.id,
+        name=tmpl.name,
+        completed=completed,
+        date=on_date,
+        completed_at=completed_at,
+    )
 
 
 # ── One-off tasks ────────────────────────────────────────

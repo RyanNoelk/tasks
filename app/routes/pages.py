@@ -15,13 +15,12 @@ router = APIRouter()
 @router.get("/", response_class=HTMLResponse)
 def index(
     request: Request,
-    q: str | None = None,
     page: int = 1,
     session: Session = Depends(get_session),
 ) -> HTMLResponse:
     on_date = today_local()
     items = services.checklist_for(session, on_date, include_inactive=False)
-    one_offs = services.list_pending_one_offs(session, q=q, page=page)
+    one_offs = services.list_pending_one_offs(session, page=page)
     return templates.TemplateResponse(
         request,
         "index.html",
@@ -30,7 +29,6 @@ def index(
             "on_date": on_date,
             "is_today": True,
             "one_offs": one_offs,
-            "q": q or "",
         },
     )
 

@@ -3,7 +3,7 @@ from datetime import date, datetime
 from zoneinfo import ZoneInfo, ZoneInfoNotFoundError
 
 
-def _local_zone() -> ZoneInfo:
+def local_zone() -> ZoneInfo:
     name = os.environ.get("TZ", "UTC")
     try:
         return ZoneInfo(name)
@@ -11,5 +11,8 @@ def _local_zone() -> ZoneInfo:
         return ZoneInfo("UTC")
 
 
+_local_zone = local_zone  # backward compat
+
+
 def today() -> date:
-    return datetime.now(_local_zone()).date()
+    return datetime.now(local_zone()).date()

@@ -15,4 +15,7 @@
     </span>
     {% endif %}
     <span class="name">{{ item.name }}</span>
+    {% if item.completed and item.completed_at %}
+    <span class="status muted completion-time">Completed: {{ item.completed_at | local_hm }}</span>
+    {% endif %}
 </li>
