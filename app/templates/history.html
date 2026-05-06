@@ -3,11 +3,19 @@
 {% block content %}
 <header class="page-header">
     <h1>History</h1>
-    <form method="get" action="/history" class="date-form">
-        <label for="date">Date:</label>
-        <input type="date" id="date" name="date" value="{{ on_date.isoformat() }}">
-        <button type="submit">Go</button>
-    </form>
+    <div class="history-controls">
+        <a class="day-nav" href="/history?date={{ prev_date.isoformat() }}" aria-label="Previous day">&larr; Prev</a>
+        <form method="get" action="/history" class="date-form">
+            <label for="date">Date:</label>
+            <input type="date" id="date" name="date" value="{{ on_date.isoformat() }}">
+            <button type="submit">Go</button>
+        </form>
+        {% if next_date %}
+        <a class="day-nav" href="/history?date={{ next_date.isoformat() }}" aria-label="Next day">Next &rarr;</a>
+        {% else %}
+        <span class="day-nav disabled" aria-disabled="true">Next &rarr;</span>
+        {% endif %}
+    </div>
 </header>
 
 {% if not items %}

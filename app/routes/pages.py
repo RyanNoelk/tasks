@@ -1,4 +1,4 @@
-from datetime import date as date_cls
+from datetime import date as date_cls, timedelta
 
 from fastapi import APIRouter, Depends, HTTPException, Request
 from fastapi.responses import HTMLResponse
@@ -44,10 +44,19 @@ def history(
             raise HTTPException(status_code=400, detail="invalid date, expected YYYY-MM-DD") from exc
 
     items = services.checklist_for(session, on_date, include_inactive=True)
+    today = today_local()
+    prev_date = on_date - timedelta(days=1)
+    next_date = on_date + timedelta(days=1) if on_date < today else None
     return templates.TemplateResponse(
         request,
         "history.html",
-        {"items": items, "on_date": on_date, "is_today": on_date == today_local()},
+        {
+            "items": items,
+            "on_date": on_date,
+            "is_today": on_date == today,
+            "prev_date": prev_date,
+            "next_date": next_date,
+        },
     )
 
 

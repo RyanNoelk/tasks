@@ -148,7 +148,17 @@ For continuous replication, [Litestream](https://litestream.io) can stream SQLit
 
 ## Development
 
-Without Docker:
+### Hot-reload via Docker
+
+`docker-compose.yml` bind-mounts `./app`, `./alembic`, and `alembic.ini` into
+the container and runs uvicorn with `--reload --reload-dir /app/app`. Edit any
+file under `./app/` and uvicorn restarts inside the container automatically.
+
+```bash
+docker compose up --build
+```
+
+### Without Docker
 
 ```bash
 python -m venv .venv && source .venv/bin/activate
