@@ -1,0 +1,17 @@
+<li id="template-row-{{ row.id }}" class="template-row{% if not row.active %} inactive{% endif %}">
+    <span class="name">{{ row.name }}</span>
+    {% if row.active %}
+    <span class="status">active</span>
+    <button
+        type="button"
+        class="danger"
+        hx-delete="/templates/{{ row.id }}"
+        hx-target="#template-row-{{ row.id }}"
+        hx-swap="outerHTML"
+        hx-confirm="Delete '{{ row.name }}'? It will be hidden from today; history is preserved.">
+        Delete
+    </button>
+    {% else %}
+    <span class="status muted">archived</span>
+    {% endif %}
+</li>

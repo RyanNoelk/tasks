@@ -1,0 +1,24 @@
+{% extends "base.html" %}
+{% block title %}Manage — Daily Tasks{% endblock %}
+{% block content %}
+<header class="page-header">
+    <h1>Manage Tasks</h1>
+    <p class="subtitle">Edit the recurring checklist.</p>
+</header>
+
+<form
+    class="add-form"
+    hx-post="/templates"
+    hx-target="#template-list"
+    hx-swap="beforeend"
+    hx-on::after-request="this.reset()">
+    <input type="text" name="name" placeholder="New task name" required maxlength="200" autofocus>
+    <button type="submit">Add</button>
+</form>
+
+<ul id="template-list" class="template-list">
+    {% for row in rows %}
+        {% include "partials/template_row.html" %}
+    {% endfor %}
+</ul>
+{% endblock %}

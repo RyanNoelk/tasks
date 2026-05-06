@@ -1,0 +1,20 @@
+{% extends "base.html" %}
+{% block title %}Today — Daily Tasks{% endblock %}
+{% block content %}
+<header class="page-header">
+    <h1>Today</h1>
+    <p class="subtitle">{{ on_date.isoformat() }}</p>
+</header>
+
+{% if not items %}
+<p class="empty">
+    No tasks yet. <a href="/manage">Add some</a>.
+</p>
+{% else %}
+<ul class="checklist">
+    {% for item in items %}
+        {% include "partials/task_row.html" %}
+    {% endfor %}
+</ul>
+{% endif %}
+{% endblock %}

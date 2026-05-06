@@ -1,0 +1,22 @@
+{% extends "base.html" %}
+{% block title %}History — Daily Tasks{% endblock %}
+{% block content %}
+<header class="page-header">
+    <h1>History</h1>
+    <form method="get" action="/history" class="date-form">
+        <label for="date">Date:</label>
+        <input type="date" id="date" name="date" value="{{ on_date.isoformat() }}">
+        <button type="submit">Go</button>
+    </form>
+</header>
+
+{% if not items %}
+<p class="empty">No tasks recorded for {{ on_date.isoformat() }}.</p>
+{% else %}
+<ul class="checklist readonly">
+    {% for item in items %}
+        {% include "partials/task_row.html" %}
+    {% endfor %}
+</ul>
+{% endif %}
+{% endblock %}

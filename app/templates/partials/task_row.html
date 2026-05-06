@@ -1,0 +1,18 @@
+<li id="task-row-{{ item.template_id }}"
+    class="task-row{% if item.completed %} completed{% endif %}">
+    <form
+        hx-post="/tasks/{{ item.template_id }}/toggle?date={{ item.date.isoformat() }}"
+        hx-target="#task-row-{{ item.template_id }}"
+        hx-swap="outerHTML"
+        {% if not is_today %}style="display:none"{% endif %}>
+        <button type="submit" class="toggle" aria-label="toggle">
+            {% if item.completed %}&#x2611;{% else %}&#x2610;{% endif %}
+        </button>
+    </form>
+    {% if not is_today %}
+    <span class="toggle static" aria-hidden="true">
+        {% if item.completed %}&#x2611;{% else %}&#x2610;{% endif %}
+    </span>
+    {% endif %}
+    <span class="name">{{ item.name }}</span>
+</li>

@@ -1,0 +1,190 @@
+:root {
+    --bg: #f7f7f5;
+    --fg: #1c1c1e;
+    --muted: #8a8a8e;
+    --accent: #2563eb;
+    --done: #16a34a;
+    --danger: #dc2626;
+    --border: #e5e5e7;
+    --card: #ffffff;
+}
+
+@media (prefers-color-scheme: dark) {
+    :root {
+        --bg: #111113;
+        --fg: #f1f1f3;
+        --muted: #888a8e;
+        --accent: #60a5fa;
+        --done: #4ade80;
+        --danger: #f87171;
+        --border: #2a2a2e;
+        --card: #1c1c1f;
+    }
+}
+
+* { box-sizing: border-box; }
+
+body {
+    margin: 0;
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+    background: var(--bg);
+    color: var(--fg);
+    -webkit-font-smoothing: antialiased;
+}
+
+main {
+    max-width: 720px;
+    margin: 0 auto;
+    padding: 1.5rem 1rem 4rem;
+}
+
+.topnav {
+    display: flex;
+    gap: 1rem;
+    padding: 0.75rem 1.5rem;
+    background: var(--card);
+    border-bottom: 1px solid var(--border);
+    position: sticky;
+    top: 0;
+    z-index: 10;
+}
+
+.topnav a {
+    color: var(--accent);
+    text-decoration: none;
+    font-weight: 500;
+}
+
+.topnav a:hover { text-decoration: underline; }
+
+.page-header {
+    margin-bottom: 1.5rem;
+}
+
+.page-header h1 {
+    margin: 0 0 0.25rem;
+    font-size: 1.75rem;
+}
+
+.subtitle { color: var(--muted); margin: 0; }
+
+.empty {
+    color: var(--muted);
+    text-align: center;
+    padding: 2rem 0;
+}
+
+ul.checklist, ul.template-list {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+}
+
+.task-row, .template-row {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    padding: 0.875rem 1rem;
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 0.5rem;
+}
+
+.task-row form { margin: 0; display: contents; }
+
+.task-row .toggle {
+    background: none;
+    border: none;
+    color: var(--fg);
+    font-size: 1.5rem;
+    line-height: 1;
+    cursor: pointer;
+    padding: 0;
+}
+
+.task-row .toggle.static { cursor: default; }
+
+.task-row.completed .name {
+    text-decoration: line-through;
+    color: var(--muted);
+}
+
+.task-row.completed .toggle { color: var(--done); }
+
+.task-row .name, .template-row .name {
+    flex: 1;
+    font-size: 1rem;
+}
+
+.template-row .status {
+    font-size: 0.75rem;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    color: var(--done);
+}
+
+.template-row .status.muted { color: var(--muted); }
+
+.template-row.inactive .name {
+    color: var(--muted);
+    text-decoration: line-through;
+}
+
+button.danger {
+    background: transparent;
+    color: var(--danger);
+    border: 1px solid var(--danger);
+    padding: 0.25rem 0.625rem;
+    border-radius: 0.375rem;
+    cursor: pointer;
+    font-size: 0.85rem;
+}
+
+button.danger:hover {
+    background: var(--danger);
+    color: white;
+}
+
+.add-form {
+    display: flex;
+    gap: 0.5rem;
+    margin-bottom: 1.5rem;
+}
+
+.add-form input[type=text] {
+    flex: 1;
+    padding: 0.625rem 0.75rem;
+    font-size: 1rem;
+    border: 1px solid var(--border);
+    border-radius: 0.375rem;
+    background: var(--card);
+    color: var(--fg);
+}
+
+.add-form button, .date-form button {
+    padding: 0.625rem 1rem;
+    background: var(--accent);
+    color: white;
+    border: none;
+    border-radius: 0.375rem;
+    font-size: 1rem;
+    cursor: pointer;
+}
+
+.date-form {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    margin-top: 0.5rem;
+}
+
+.date-form input[type=date] {
+    padding: 0.375rem 0.5rem;
+    border: 1px solid var(--border);
+    border-radius: 0.375rem;
+    background: var(--card);
+    color: var(--fg);
+}
