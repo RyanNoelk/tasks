@@ -1,3 +1,5 @@
+from datetime import date as date_cls
+
 from fastapi import APIRouter, Depends, Form, HTTPException, Request
 from fastapi.responses import HTMLResponse, Response
 from sqlalchemy.orm import Session
@@ -5,6 +7,7 @@ from sqlalchemy.orm import Session
 from app import services
 from app.db import get_session
 from app.templating import templates
+from app.time import today as today_local
 
 router = APIRouter(prefix="/one-offs")
 
@@ -13,12 +16,24 @@ router = APIRouter(prefix="/one-offs")
 def create(
     request: Request,
     name: str = Form(...),
+    due_date: str | None = Form(default=None),
     session: Session = Depends(get_session),
-) -> HTMLResponse:
+) -> HTMLResponse | Response:
     name = name.strip()
     if not name:
         raise HTTPException(status_code=400, detail="name required")
-    task = services.create_one_off(session, name)
+    parsed_due: date_cls | None = None
+    if due_date:
+        try:
+            parsed_due = date_cls.fromisoformat(due_date)
+        except ValueError as exc:
+            raise HTTPException(status_code=400, detail="invalid due_date") from exc
+    task = services.create_one_off(session, name, due_date=parsed_due)
+    # If the task is due today/past, it belongs in the Daily checklist section.
+    # Trigger a full HTMX refresh so the page re-renders with the row in the
+    # correct bucket.
+    if parsed_due and parsed_due <= today_local():
+        return Response(status_code=204, headers={"HX-Refresh": "true"})
     return templates.TemplateResponse(
         request,
         "partials/one_off_row.html",

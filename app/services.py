@@ -5,6 +5,8 @@ from sqlalchemy import func, select
 from sqlalchemy.orm import Session
 
 from app.models import OneOffTask, TaskCompletion, TaskTemplate
+from app.scheduling import is_scheduled
+from app.time import today as today_local
 
 
 def _utcnow() -> datetime:
@@ -38,9 +40,21 @@ def get_template(session: Session, template_id: int) -> TaskTemplate | None:
     return session.get(TaskTemplate, template_id)
 
 
-def create_template(session: Session, name: str) -> TaskTemplate:
+def create_template(
+    session: Session,
+    name: str,
+    *,
+    rrule: str = "FREQ=DAILY",
+    dtstart: date | None = None,
+) -> TaskTemplate:
     max_pos = session.scalar(select(func.coalesce(func.max(TaskTemplate.position), -1))) or -1
-    tmpl = TaskTemplate(name=name.strip(), position=max_pos + 1, active=True)
+    tmpl = TaskTemplate(
+        name=name.strip(),
+        position=max_pos + 1,
+        active=True,
+        schedule_rrule=rrule,
+        schedule_dtstart=dtstart or today_local(),
+    )
     session.add(tmpl)
     session.commit()
     session.refresh(tmpl)
@@ -53,6 +67,8 @@ def update_template(
     *,
     name: str | None = None,
     position: int | None = None,
+    rrule: str | None = None,
+    dtstart: date | None = None,
 ) -> TaskTemplate | None:
     tmpl = session.get(TaskTemplate, template_id)
     if tmpl is None:
@@ -61,6 +77,10 @@ def update_template(
         tmpl.name = name.strip()
     if position is not None:
         tmpl.position = position
+    if rrule is not None:
+        tmpl.schedule_rrule = rrule
+    if dtstart is not None:
+        tmpl.schedule_dtstart = dtstart
     session.commit()
     session.refresh(tmpl)
     return tmpl
@@ -105,6 +125,13 @@ def checklist_for(session: Session, on_date: date, *, include_inactive: bool = F
         )
     templates = list(session.scalars(stmt))
 
+    completed_template_ids = completion_times.keys()
+    visible = [
+        t
+        for t in templates
+        if is_scheduled(t, on_date) or t.id in completed_template_ids
+    ]
+
     return [
         ChecklistItem(
             template_id=t.id,
@@ -113,7 +140,7 @@ def checklist_for(session: Session, on_date: date, *, include_inactive: bool = F
             date=on_date,
             completed_at=completion_times.get(t.id),
         )
-        for t in templates
+        for t in visible
     ]
 
 
@@ -216,7 +243,11 @@ def list_pending_one_offs(
     return _paginate_one_offs(
         session,
         OneOffTask.completed_at.is_(None),
-        (OneOffTask.created_at, OneOffTask.id),
+        (
+            OneOffTask.due_date.asc().nulls_last(),
+            OneOffTask.created_at,
+            OneOffTask.id,
+        ),
         q=q,
         page=page,
         page_size=page_size,
@@ -240,8 +271,13 @@ def list_completed_one_offs(
     )
 
 
-def create_one_off(session: Session, name: str) -> OneOffTask:
-    task = OneOffTask(name=name.strip())
+def create_one_off(
+    session: Session,
+    name: str,
+    *,
+    due_date: date | None = None,
+) -> OneOffTask:
+    task = OneOffTask(name=name.strip(), due_date=due_date)
     session.add(task)
     session.commit()
     session.refresh(task)

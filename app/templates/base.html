@@ -24,5 +24,27 @@
     <main>
         {% block content %}{% endblock %}
     </main>
+    <script>
+    function tasksToggleScheduleFields(form) {
+        const select = form.querySelector('[name="preset"]');
+        if (!select) return;
+        const preset = select.value;
+        form.querySelectorAll('[data-preset-show]').forEach(el => {
+            const presets = el.getAttribute('data-preset-show').split(',');
+            el.style.display = presets.includes(preset) ? '' : 'none';
+        });
+    }
+    function tasksInitForms(root) {
+        (root || document).querySelectorAll('form.template-form').forEach(tasksToggleScheduleFields);
+    }
+    document.addEventListener('change', e => {
+        if (e.target.matches('[name="preset"]')) {
+            const form = e.target.closest('form');
+            if (form) tasksToggleScheduleFields(form);
+        }
+    });
+    document.addEventListener('DOMContentLoaded', () => tasksInitForms());
+    document.body.addEventListener('htmx:afterSwap', e => tasksInitForms(e.detail.target));
+    </script>
 </body>
 </html>

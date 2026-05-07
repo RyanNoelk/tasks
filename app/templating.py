@@ -3,7 +3,8 @@ from pathlib import Path
 
 from fastapi.templating import Jinja2Templates
 
-from app.time import local_zone
+from app.scheduling import format_frequency
+from app.time import local_zone, today as today_local
 
 TEMPLATES_DIR = Path(__file__).parent / "templates"
 templates = Jinja2Templates(directory=str(TEMPLATES_DIR))
@@ -23,3 +24,5 @@ def _format_local_hm(dt: datetime | None) -> str:
 
 
 templates.env.filters["local_hm"] = _format_local_hm
+templates.env.filters["frequency"] = format_frequency
+templates.env.globals["today"] = today_local

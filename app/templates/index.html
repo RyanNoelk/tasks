@@ -7,7 +7,7 @@
 
 <section class="section">
     <h2 class="section-title">Daily checklist</h2>
-    {% if not items %}
+    {% if not items and not one_offs_due_now %}
     <p class="empty">
         No tasks yet. <a href="/manage">Add some</a>.
     </p>
@@ -15,6 +15,10 @@
     <ul class="checklist">
         {% for item in items %}
             {% include "partials/task_row.html" %}
+        {% endfor %}
+        {% set view = 'today' %}
+        {% for task in one_offs_due_now %}
+            {% include "partials/one_off_row.html" %}
         {% endfor %}
     </ul>
     {% endif %}
@@ -24,23 +28,24 @@
     <h2 class="section-title">One-offs</h2>
 
     <form
-        class="add-form"
+        class="add-form one-off-form"
         hx-post="/one-offs"
         hx-target="#one-off-list"
         hx-swap="beforeend"
         hx-on::after-request="this.reset()">
         <input type="text" name="name" placeholder="Add a one-off task" required maxlength="200">
+        <input type="date" name="due_date" title="Due date (optional)">
         <button type="submit">Add</button>
     </form>
 
     <ul id="one-off-list" class="checklist">
         {% set view = 'today' %}
-        {% for task in one_offs.items %}
+        {% for task in one_offs_later %}
             {% include "partials/one_off_row.html" %}
         {% endfor %}
     </ul>
-    {% if not one_offs.items %}
-    <p class="empty subtle">No pending one-offs.</p>
+    {% if not one_offs_later %}
+    <p class="empty subtle">No upcoming one-offs.</p>
     {% endif %}
 
     {% with page=one_offs, base_path='/', q='' %}

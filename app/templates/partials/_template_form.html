@@ -1,0 +1,101 @@
+{# Args: state (FormState), mode ('create' | 'edit'), row (TaskTemplate when mode='edit') #}
+{% set is_edit = mode == 'edit' %}
+{% set form_class = 'template-form edit-mode' if is_edit else 'template-form add-mode' %}
+{% if is_edit %}
+<form
+    class="{{ form_class }}"
+    hx-patch="/templates/{{ row.id }}"
+    hx-target="#template-row-{{ row.id }}"
+    hx-swap="outerHTML">
+{% else %}
+<form
+    class="{{ form_class }}"
+    hx-post="/templates"
+    hx-target="#template-list"
+    hx-swap="beforeend"
+    hx-on::after-request="if(event.detail.successful){this.reset();this.querySelector('[name=preset]').value='daily';tasksToggleScheduleFields(this);}">
+{% endif %}
+
+    <div class="template-form-row">
+        <input
+            type="text"
+            name="name"
+            value="{{ row.name if is_edit else '' }}"
+            placeholder="Task name"
+            required
+            maxlength="200"
+            {% if not is_edit %}autofocus{% endif %}>
+        <select name="preset" class="preset-select">
+            <option value="daily"            {% if state.preset == 'daily' %}selected{% endif %}>Daily</option>
+            <option value="weekdays"         {% if state.preset == 'weekdays' %}selected{% endif %}>Weekdays</option>
+            <option value="weekends"         {% if state.preset == 'weekends' %}selected{% endif %}>Weekends</option>
+            <option value="custom_weekly"    {% if state.preset == 'custom_weekly' %}selected{% endif %}>Specific days of week</option>
+            <option value="every_n_weeks"    {% if state.preset == 'every_n_weeks' %}selected{% endif %}>Every N weeks</option>
+            <option value="monthly_day"      {% if state.preset == 'monthly_day' %}selected{% endif %}>Monthly on day</option>
+            <option value="monthly_nth_weekday" {% if state.preset == 'monthly_nth_weekday' %}selected{% endif %}>Nth weekday of month</option>
+        </select>
+    </div>
+
+    <div class="schedule-fields" data-preset-show="custom_weekly,every_n_weeks">
+        <fieldset class="day-grid">
+            <legend>Days</legend>
+            {% for label, idx in [('Mon',0),('Tue',1),('Wed',2),('Thu',3),('Fri',4),('Sat',5),('Sun',6)] %}
+            <label>
+                <input type="checkbox" name="days" value="{{ idx }}"
+                       {% if idx in state.days %}checked{% endif %}>
+                <span>{{ label }}</span>
+            </label>
+            {% endfor %}
+        </fieldset>
+    </div>
+
+    <div class="schedule-fields" data-preset-show="every_n_weeks">
+        <label class="inline-field">
+            Every
+            <input type="number" name="interval" min="2" max="52" value="{{ state.interval }}">
+            weeks, starting
+            <input type="date" name="anchor_date" value="{{ state.anchor_date.isoformat() if state.anchor_date else '' }}">
+        </label>
+    </div>
+
+    <div class="schedule-fields" data-preset-show="monthly_day">
+        <label class="inline-field">
+            Day of month
+            <input type="number" name="day_of_month" min="1" max="31" value="{{ state.day_of_month }}">
+        </label>
+        <label class="inline-field">
+            <input type="checkbox" name="last_day" value="true" {% if state.last_day %}checked{% endif %}>
+            Last day of month
+        </label>
+    </div>
+
+    <div class="schedule-fields" data-preset-show="monthly_nth_weekday">
+        <label class="inline-field">
+            <select name="which_week">
+                <option value="1"  {% if state.which_week == 1 %}selected{% endif %}>First</option>
+                <option value="2"  {% if state.which_week == 2 %}selected{% endif %}>Second</option>
+                <option value="3"  {% if state.which_week == 3 %}selected{% endif %}>Third</option>
+                <option value="4"  {% if state.which_week == 4 %}selected{% endif %}>Fourth</option>
+                <option value="-1" {% if state.which_week == -1 %}selected{% endif %}>Last</option>
+            </select>
+            <select name="which_weekday">
+                {% for label, idx in [('Monday',0),('Tuesday',1),('Wednesday',2),('Thursday',3),('Friday',4),('Saturday',5),('Sunday',6)] %}
+                <option value="{{ idx }}" {% if state.which_weekday == idx %}selected{% endif %}>{{ label }}</option>
+                {% endfor %}
+            </select>
+            of the month
+        </label>
+    </div>
+
+    <div class="template-form-actions">
+        <button type="submit">{% if is_edit %}Save{% else %}Add{% endif %}</button>
+        {% if is_edit %}
+        <button
+            type="button"
+            class="ghost"
+            hx-get="/templates/{{ row.id }}/cancel-edit"
+            hx-target="#template-row-{{ row.id }}"
+            hx-swap="outerHTML">Cancel</button>
+        {% endif %}
+    </div>
+</form>

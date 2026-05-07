@@ -6,15 +6,11 @@
     <p class="subtitle">Edit the recurring checklist.</p>
 </header>
 
-<form
-    class="add-form"
-    hx-post="/templates"
-    hx-target="#template-list"
-    hx-swap="beforeend"
-    hx-on::after-request="this.reset()">
-    <input type="text" name="name" placeholder="New task name" required maxlength="200" autofocus>
-    <button type="submit">Add</button>
-</form>
+<section class="add-section">
+    {% with state=form_state, mode='create' %}
+        {% include "partials/_template_form.html" %}
+    {% endwith %}
+</section>
 
 <ul id="template-list" class="template-list">
     {% for row in rows %}

@@ -6,6 +6,7 @@ from sqlalchemy.orm import Session
 
 from app import services
 from app.db import get_session
+from app.scheduling import FormState
 from app.time import today as today_local
 from app.templating import templates
 
@@ -21,6 +22,8 @@ def index(
     on_date = today_local()
     items = services.checklist_for(session, on_date, include_inactive=False)
     one_offs = services.list_pending_one_offs(session, page=page)
+    due_now = [t for t in one_offs.items if t.due_date and t.due_date <= on_date]
+    later = [t for t in one_offs.items if not t.due_date or t.due_date > on_date]
     return templates.TemplateResponse(
         request,
         "index.html",
@@ -29,6 +32,8 @@ def index(
             "on_date": on_date,
             "is_today": True,
             "one_offs": one_offs,
+            "one_offs_due_now": due_now,
+            "one_offs_later": later,
         },
     )
 
@@ -36,7 +41,11 @@ def index(
 @router.get("/manage", response_class=HTMLResponse)
 def manage(request: Request, session: Session = Depends(get_session)) -> HTMLResponse:
     rows = services.list_all_templates(session)
-    return templates.TemplateResponse(request, "manage.html", {"rows": rows})
+    return templates.TemplateResponse(
+        request,
+        "manage.html",
+        {"rows": rows, "form_state": FormState(anchor_date=today_local())},
+    )
 
 
 @router.get("/history", response_class=HTMLResponse)

@@ -10,6 +10,20 @@
         </button>
     </form>
     <span class="name">{{ task.name }}</span>
+    {% if task.due_date %}
+    {% set _today = today() %}
+    {% if task.due_date < _today %}
+        {% set due_class = 'overdue' %}
+        {% set due_label = 'Overdue ' + task.due_date.strftime('%b %-d') %}
+    {% elif task.due_date == _today %}
+        {% set due_class = 'today' %}
+        {% set due_label = 'Due today' %}
+    {% else %}
+        {% set due_class = 'upcoming' %}
+        {% set due_label = 'Due ' + task.due_date.strftime('%b %-d') %}
+    {% endif %}
+    <span class="due-badge {{ due_class }}">{{ due_label }}</span>
+    {% endif %}
     <button
         type="button"
         class="danger"

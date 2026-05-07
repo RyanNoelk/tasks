@@ -1,6 +1,14 @@
 from datetime import date, datetime, timezone
 
-from sqlalchemy import Boolean, Date, DateTime, ForeignKey, Integer, String, UniqueConstraint
+from sqlalchemy import (
+    Boolean,
+    Date,
+    DateTime,
+    ForeignKey,
+    Integer,
+    String,
+    UniqueConstraint,
+)
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from app.db import Base
@@ -18,6 +26,12 @@ class TaskTemplate(Base):
     position: Mapped[int] = mapped_column(Integer, nullable=False, default=0)
     active: Mapped[bool] = mapped_column(Boolean, nullable=False, default=True)
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=False, default=_utcnow)
+    schedule_rrule: Mapped[str] = mapped_column(
+        String, nullable=False, default="FREQ=DAILY"
+    )
+    schedule_dtstart: Mapped[date] = mapped_column(
+        Date, nullable=False, default=lambda: datetime.now(timezone.utc).date()
+    )
 
     completions: Mapped[list["TaskCompletion"]] = relationship(
         back_populates="template", cascade="all, delete-orphan"
@@ -43,6 +57,7 @@ class OneOffTask(Base):
 
     id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True)
     name: Mapped[str] = mapped_column(String, nullable=False)
+    due_date: Mapped[date | None] = mapped_column(Date, nullable=True, index=True)
     completed_at: Mapped[datetime | None] = mapped_column(
         DateTime(timezone=True), nullable=True, index=True
     )

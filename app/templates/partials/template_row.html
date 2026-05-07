@@ -1,7 +1,15 @@
 <li id="template-row-{{ row.id }}" class="template-row{% if not row.active %} inactive{% endif %}">
     <span class="name">{{ row.name }}</span>
+    <span class="status muted">{{ row | frequency }}</span>
     {% if row.active %}
-    <span class="status">active</span>
+    <button
+        type="button"
+        class="ghost"
+        hx-get="/templates/{{ row.id }}/edit"
+        hx-target="#template-row-{{ row.id }}"
+        hx-swap="outerHTML">
+        Edit
+    </button>
     <button
         type="button"
         class="danger"

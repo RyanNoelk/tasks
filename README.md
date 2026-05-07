@@ -53,13 +53,15 @@ Three tables. Templates + completions cover the recurring daily list. `one_off_t
 
 ### `task_template`
 
-| Column      | Type      | Notes                              |
-|-------------|-----------|------------------------------------|
-| `id`        | INTEGER PK | autoincrement                     |
-| `name`      | TEXT      | not null                           |
-| `position`  | INTEGER   | display order                      |
-| `active`    | BOOLEAN   | soft-delete; false = hidden today  |
-| `created_at`| TIMESTAMP | UTC                                |
+| Column             | Type       | Notes                                                |
+|--------------------|------------|------------------------------------------------------|
+| `id`               | INTEGER PK | autoincrement                                        |
+| `name`             | TEXT       | not null                                             |
+| `position`         | INTEGER    | display order                                        |
+| `active`           | BOOLEAN    | soft-delete; false = hidden today                    |
+| `created_at`       | TIMESTAMP  | UTC                                                  |
+| `schedule_rrule`   | TEXT       | RFC 5545 RRULE string (e.g., `FREQ=DAILY`)           |
+| `schedule_dtstart` | DATE       | anchor date for INTERVAL (every-N-weeks)             |
 
 ### `task_completion`
 
@@ -85,6 +87,27 @@ Three tables. Templates + completions cover the recurring daily list. `one_off_t
 One-offs are not tied to a date. They appear on `/` until marked complete, then surface on `/one-offs/history` (newest-completed first) where they can be restored or deleted.
 
 ---
+
+## Scheduling
+
+Each `task_template` has a schedule defined by an RRULE string + DTSTART
+anchor. The Manage page exposes presets that compile to standard RRULE:
+
+| Preset                    | Example RRULE                          |
+|---------------------------|----------------------------------------|
+| Daily                     | `FREQ=DAILY`                           |
+| Weekdays                  | `FREQ=WEEKLY;BYDAY=MO,TU,WE,TH,FR`     |
+| Weekends                  | `FREQ=WEEKLY;BYDAY=SA,SU`              |
+| Specific days of week     | `FREQ=WEEKLY;BYDAY=MO,WE,FR`           |
+| Every N weeks             | `FREQ=WEEKLY;INTERVAL=2;BYDAY=MO`      |
+| Monthly on day            | `FREQ=MONTHLY;BYMONTHDAY=15` (or `-1` for last day) |
+| Nth weekday of month      | `FREQ=MONTHLY;BYDAY=1MO` / `-1FR`      |
+
+A task is shown for a given date if `schedule_rrule` produces an occurrence
+on that date (evaluated via `python-dateutil`).
+
+The `schedule_dtstart` defines the anchor for `INTERVAL` rules — e.g.,
+"every 3 weeks starting Mon Jun 1" means rows fall on Jun 1, Jun 22, Jul 13.
 
 ## Daily Reset Semantics
 
