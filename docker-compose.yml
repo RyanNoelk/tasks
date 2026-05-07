@@ -5,7 +5,7 @@ services:
     container_name: daily-tasks
     restart: unless-stopped
     ports:
-      - "8000:8000"
+      - "8989:8000"
     environment:
       TZ: ${TZ:-UTC}
       DB_PATH: /data/tasks.db

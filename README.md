@@ -163,7 +163,7 @@ cd tasks
 docker compose up -d --build
 ```
 
-Then open `http://<host>:8000` from any device on the LAN.
+Then open `http://<host>:8989` from any device on the LAN.
 
 To find the host IP from another device: `ip addr` (Linux) or `ifconfig` (macOS).
 
