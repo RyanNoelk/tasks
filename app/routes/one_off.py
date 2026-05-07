@@ -12,13 +12,13 @@ from app.time import today as today_local
 router = APIRouter(prefix="/one-offs")
 
 
-@router.post("", response_class=HTMLResponse)
+@router.post("", response_class=HTMLResponse, response_model=None)
 def create(
     request: Request,
     name: str = Form(...),
     due_date: str | None = Form(default=None),
     session: Session = Depends(get_session),
-) -> HTMLResponse | Response:
+):
     name = name.strip()
     if not name:
         raise HTTPException(status_code=400, detail="name required")
@@ -29,10 +29,10 @@ def create(
         except ValueError as exc:
             raise HTTPException(status_code=400, detail="invalid due_date") from exc
     task = services.create_one_off(session, name, due_date=parsed_due)
-    # If the task is due today/past, it belongs in the Daily checklist section.
-    # Trigger a full HTMX refresh so the page re-renders with the row in the
-    # correct bucket.
-    if parsed_due and parsed_due <= today_local():
+    # Any due date affects sort order (and bucket placement when due today/past).
+    # Trigger a full HTMX refresh so server-side ORDER BY drives the layout.
+    # Undated tasks already sort last; safe to inline-append via HTMX.
+    if parsed_due is not None:
         return Response(status_code=204, headers={"HX-Refresh": "true"})
     return templates.TemplateResponse(
         request,
