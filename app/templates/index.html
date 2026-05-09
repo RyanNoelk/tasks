@@ -33,7 +33,9 @@
         hx-target="#one-off-list"
         hx-swap="beforeend"
         hx-on::after-request="this.reset()">
-        <input type="text" name="name" placeholder="Add a one-off task" required maxlength="200">
+        <input type="text" name="name" placeholder="Add a one-off task"
+               required maxlength="200"
+               autocomplete="off" autocorrect="off" spellcheck="false">
         <input type="date" name="due_date" title="Due date (optional)">
         <button type="submit">Add</button>
     </form>

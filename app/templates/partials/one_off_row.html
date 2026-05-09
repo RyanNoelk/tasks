@@ -37,7 +37,7 @@
     <span class="toggle static" aria-hidden="true">&#x2611;</span>
     <span class="name">{{ task.name }}</span>
     {% if task.completed_at %}
-    <span class="status muted">{{ task.completed_at.strftime('%Y-%m-%d') }}</span>
+    <span class="status muted"><time datetime="{{ task.completed_at | iso_utc }}" data-fmt="datetime">{{ task.completed_at.strftime('%Y-%m-%d') }}</time></span>
     {% endif %}
     <form
         hx-post="/one-offs/{{ task.id }}/restore"

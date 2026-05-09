@@ -132,7 +132,7 @@ def checklist_for(session: Session, on_date: date, *, include_inactive: bool = F
         if is_scheduled(t, on_date) or t.id in completed_template_ids
     ]
 
-    return [
+    items = [
         ChecklistItem(
             template_id=t.id,
             name=t.name,
@@ -142,6 +142,14 @@ def checklist_for(session: Session, on_date: date, *, include_inactive: bool = F
         )
         for t in visible
     ]
+
+    pending = [i for i in items if not i.completed]
+    completed_sorted = sorted(
+        (i for i in items if i.completed),
+        key=lambda i: i.completed_at or datetime.min.replace(tzinfo=timezone.utc),
+        reverse=True,
+    )
+    return pending + completed_sorted
 
 
 def toggle_completion(session: Session, template_id: int, on_date: date) -> ChecklistItem | None:

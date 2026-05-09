@@ -24,6 +24,9 @@
             placeholder="Task name"
             required
             maxlength="200"
+            autocomplete="off"
+            autocorrect="off"
+            spellcheck="false"
             {% if not is_edit %}autofocus{% endif %}>
         <select name="preset" class="preset-select">
             <option value="daily"            {% if state.preset == 'daily' %}selected{% endif %}>Daily</option>

@@ -25,6 +25,23 @@
         {% block content %}{% endblock %}
     </main>
     <script>
+    // Set browser timezone cookie so server can compute "today" in user's local zone.
+    // First visit only: detect tz, set cookie, reload once.
+    (function () {
+        try {
+            const tz = Intl.DateTimeFormat().resolvedOptions().timeZone;
+            if (!tz) return;
+            const cookies = document.cookie.split(';').map(s => s.trim());
+            const current = cookies.find(c => c.startsWith('tz='));
+            const decoded = current ? decodeURIComponent(current.slice(3)) : null;
+            if (decoded !== tz) {
+                document.cookie = 'tz=' + encodeURIComponent(tz) +
+                    '; path=/; max-age=31536000; samesite=lax';
+                if (!current) location.reload();
+            }
+        } catch (e) {}
+    })();
+
     function tasksToggleScheduleFields(form) {
         const select = form.querySelector('[name="preset"]');
         if (!select) return;
@@ -37,14 +54,41 @@
     function tasksInitForms(root) {
         (root || document).querySelectorAll('form.template-form').forEach(tasksToggleScheduleFields);
     }
+    function tasksFormatTimes(root) {
+        (root || document).querySelectorAll('time[data-fmt]').forEach(el => {
+            const iso = el.getAttribute('datetime');
+            if (!iso) return;
+            const d = new Date(iso);
+            if (isNaN(d.getTime())) return;
+            const fmt = el.getAttribute('data-fmt');
+            let text = '';
+            if (fmt === 'time') {
+                text = d.toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' });
+            } else if (fmt === 'date') {
+                text = d.toLocaleDateString([], { month: 'short', day: 'numeric' });
+            } else if (fmt === 'datetime') {
+                text = d.toLocaleString([], {
+                    month: 'short', day: 'numeric',
+                    hour: 'numeric', minute: '2-digit'
+                });
+            }
+            if (text) el.textContent = text;
+        });
+    }
     document.addEventListener('change', e => {
         if (e.target.matches('[name="preset"]')) {
             const form = e.target.closest('form');
             if (form) tasksToggleScheduleFields(form);
         }
     });
-    document.addEventListener('DOMContentLoaded', () => tasksInitForms());
-    document.body.addEventListener('htmx:afterSwap', e => tasksInitForms(e.detail.target));
+    document.addEventListener('DOMContentLoaded', () => {
+        tasksInitForms();
+        tasksFormatTimes();
+    });
+    document.body.addEventListener('htmx:afterSwap', e => {
+        tasksInitForms(e.detail.target);
+        tasksFormatTimes(e.detail.target);
+    });
     </script>
 </body>
 </html>
