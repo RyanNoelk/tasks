@@ -46,13 +46,19 @@ def _build_rule(rrule_str: str, dtstart: date):
 
 
 def is_scheduled(template, on_date: date) -> bool:
-    """Return True if `template` is scheduled to occur on `on_date`."""
+    """Return True if `template` is scheduled to occur on `on_date`.
+
+    rrule.between() with inc=True is inclusive on both ends, so an occurrence
+    landing exactly on the next day's 00:00 boundary (e.g., a Sunday rule
+    queried with start=Saturday 00:00, end=Sunday 00:00) would falsely match
+    Saturday. Filter occurrences by exact date to avoid the boundary leak.
+    """
     if on_date < template.schedule_dtstart:
         return False
     rule = _build_rule(template.schedule_rrule, template.schedule_dtstart)
     start = datetime.combine(on_date, time.min)
     end = start + timedelta(days=1)
-    return bool(rule.between(start, end, inc=True))
+    return any(occ.date() == on_date for occ in rule.between(start, end, inc=True))
 
 
 # ── Format ────────────────────────────────────────────────

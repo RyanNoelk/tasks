@@ -36,6 +36,15 @@ def list_all_templates(session: Session) -> list[TaskTemplate]:
     return list(session.scalars(stmt))
 
 
+def list_archived_templates(session: Session) -> list[TaskTemplate]:
+    stmt = (
+        select(TaskTemplate)
+        .where(TaskTemplate.active.is_(False))
+        .order_by(TaskTemplate.position, TaskTemplate.id)
+    )
+    return list(session.scalars(stmt))
+
+
 def get_template(session: Session, template_id: int) -> TaskTemplate | None:
     return session.get(TaskTemplate, template_id)
 

@@ -50,12 +50,14 @@ def manage(
     session: Session = Depends(get_session),
     today_value: date_cls = Depends(get_today),
 ) -> HTMLResponse:
-    rows = services.list_all_templates(session)
+    active_rows = services.list_active_templates(session)
+    archived_rows = services.list_archived_templates(session)
     return templates.TemplateResponse(
         request,
         "manage.html",
         {
-            "rows": rows,
+            "active_rows": active_rows,
+            "archived_rows": archived_rows,
             "form_state": FormState(anchor_date=today_value),
             "today": today_value,
         },

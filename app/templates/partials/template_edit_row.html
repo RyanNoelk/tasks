@@ -1,3 +1,5 @@
 <li id="template-row-{{ row.id }}" class="template-row editing">
-    {% include "partials/_template_form.html" %}
+    {% with mode='edit' %}
+        {% include "partials/_template_form.html" %}
+    {% endwith %}
 </li>

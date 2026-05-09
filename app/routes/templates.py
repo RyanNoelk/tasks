@@ -1,5 +1,5 @@
 from fastapi import APIRouter, Depends, Form, HTTPException, Request
-from fastapi.responses import HTMLResponse
+from fastapi.responses import HTMLResponse, Response
 from sqlalchemy.orm import Session
 
 from app import services
@@ -150,18 +150,13 @@ def update(
     )
 
 
-@router.delete("/{template_id}", response_class=HTMLResponse)
+@router.delete("/{template_id}", response_model=None)
 def delete(
-    request: Request,
     template_id: int,
     session: Session = Depends(get_session),
-) -> HTMLResponse:
+):
     ok = services.soft_delete_template(session, template_id)
     if not ok:
         raise HTTPException(status_code=404, detail="template not found")
-    tmpl = services.get_template(session, template_id)
-    return templates.TemplateResponse(
-        request,
-        "partials/template_row.html",
-        {"row": tmpl},
-    )
+    # Refresh so the row moves to the Archived tab and counts update.
+    return Response(status_code=204, headers={"HX-Refresh": "true"})

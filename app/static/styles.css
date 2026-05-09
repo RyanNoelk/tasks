@@ -357,6 +357,95 @@ button.danger:hover {
 
 .add-section { margin-bottom: 1.5rem; }
 
+.tabs .tab-input { position: absolute; opacity: 0; pointer-events: none; }
+
+.tabs .tab-bar {
+    display: inline-flex;
+    gap: 0.25rem;
+    padding: 0.25rem;
+    background: var(--border);
+    border-radius: 999px;
+    margin-bottom: 1.25rem;
+    position: relative;
+}
+
+.tabs .tab-label {
+    padding: 0.45rem 1.1rem;
+    cursor: pointer;
+    color: var(--muted);
+    font-size: 0.875rem;
+    font-weight: 600;
+    border-radius: 999px;
+    user-select: none;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.45rem;
+    transition: color 160ms ease, background-color 160ms ease,
+                box-shadow 160ms ease, transform 160ms ease;
+    line-height: 1;
+}
+
+.tabs .tab-label:hover { color: var(--fg); }
+
+.tabs .tab-count {
+    font-size: 0.7rem;
+    font-weight: 700;
+    padding: 0.12rem 0.45rem;
+    border-radius: 999px;
+    background: rgba(0, 0, 0, 0.08);
+    color: inherit;
+    min-width: 1.4rem;
+    text-align: center;
+    line-height: 1.2;
+    transition: background-color 160ms ease, color 160ms ease;
+}
+
+@media (prefers-color-scheme: dark) {
+    .tabs .tab-count { background: rgba(255, 255, 255, 0.1); }
+}
+
+.tabs #tab-active:checked ~ .tab-bar label[for="tab-active"],
+.tabs #tab-archived:checked ~ .tab-bar label[for="tab-archived"] {
+    color: var(--fg);
+    background: var(--card);
+    box-shadow:
+        0 1px 2px rgba(0, 0, 0, 0.08),
+        0 0 0 1px rgba(0, 0, 0, 0.04);
+}
+
+@media (prefers-color-scheme: dark) {
+    .tabs #tab-active:checked ~ .tab-bar label[for="tab-active"],
+    .tabs #tab-archived:checked ~ .tab-bar label[for="tab-archived"] {
+        background: var(--card);
+        box-shadow:
+            0 1px 2px rgba(0, 0, 0, 0.5),
+            0 0 0 1px rgba(255, 255, 255, 0.06);
+    }
+}
+
+.tabs #tab-active:checked ~ .tab-bar label[for="tab-active"] .tab-count,
+.tabs #tab-archived:checked ~ .tab-bar label[for="tab-archived"] .tab-count {
+    background: var(--accent);
+    color: #fff;
+}
+
+.tabs .tab-label:active { transform: scale(0.97); }
+
+.tabs .tab-panel { display: none; animation: tabFade 180ms ease-out; }
+.tabs #tab-active:checked ~ .tab-panel[data-panel="active"] { display: block; }
+.tabs #tab-archived:checked ~ .tab-panel[data-panel="archived"] { display: block; }
+
+@keyframes tabFade {
+    from { opacity: 0; transform: translateY(2px); }
+    to   { opacity: 1; transform: translateY(0); }
+}
+
+.tabs .tab-input:focus-visible + .tab-input + .tab-bar label[for="tab-active"],
+.tabs .tab-input + .tab-input:focus-visible + .tab-bar label[for="tab-archived"] {
+    outline: 2px solid var(--accent);
+    outline-offset: 3px;
+}
+
 .template-form {
     display: flex;
     flex-direction: column;

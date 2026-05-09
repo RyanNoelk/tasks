@@ -12,9 +12,41 @@
     {% endwith %}
 </section>
 
-<ul id="template-list" class="template-list">
-    {% for row in rows %}
-        {% include "partials/template_row.html" %}
-    {% endfor %}
-</ul>
+<div class="tabs">
+    <input type="radio" id="tab-active" name="manage-tab" class="tab-input" checked>
+    <input type="radio" id="tab-archived" name="manage-tab" class="tab-input">
+
+    <nav class="tab-bar" role="tablist">
+        <label for="tab-active" class="tab-label" data-target="active">
+            Active <span class="tab-count">{{ active_rows | length }}</span>
+        </label>
+        <label for="tab-archived" class="tab-label" data-target="archived">
+            Archived <span class="tab-count">{{ archived_rows | length }}</span>
+        </label>
+    </nav>
+
+    <section class="tab-panel" data-panel="active">
+        {% if active_rows %}
+        <ul id="template-list" class="template-list">
+            {% for row in active_rows %}
+                {% include "partials/template_row.html" %}
+            {% endfor %}
+        </ul>
+        {% else %}
+        <p class="empty subtle">No active tasks. Add one above.</p>
+        {% endif %}
+    </section>
+
+    <section class="tab-panel" data-panel="archived">
+        {% if archived_rows %}
+        <ul class="template-list">
+            {% for row in archived_rows %}
+                {% include "partials/template_row.html" %}
+            {% endfor %}
+        </ul>
+        {% else %}
+        <p class="empty subtle">No archived tasks.</p>
+        {% endif %}
+    </section>
+</div>
 {% endblock %}
