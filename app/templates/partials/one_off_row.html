@@ -11,7 +11,7 @@
     </form>
     <span class="name">{{ task.name }}</span>
     {% if task.due_date %}
-    {% set _today = today() %}
+    {% set _today = today %}
     {% if task.due_date < _today %}
         {% set due_class = 'overdue' %}
         {% set due_label = 'Overdue ' + task.due_date.strftime('%b %-d') %}

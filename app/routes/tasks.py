@@ -1,6 +1,6 @@
 from datetime import date as date_cls
 
-from fastapi import APIRouter, Depends, HTTPException, Request
+from fastapi import APIRouter, Cookie, Depends, HTTPException, Request
 from fastapi.responses import HTMLResponse
 from sqlalchemy.orm import Session
 
@@ -18,9 +18,11 @@ def toggle(
     template_id: int,
     date: str | None = None,
     session: Session = Depends(get_session),
+    tz: str | None = Cookie(default=None),
 ) -> HTMLResponse:
+    today_value = today_local(tz)
     if date is None:
-        on_date = today_local()
+        on_date = today_value
     else:
         try:
             on_date = date_cls.fromisoformat(date)
@@ -34,5 +36,5 @@ def toggle(
     return templates.TemplateResponse(
         request,
         "partials/task_row.html",
-        {"item": item, "is_today": on_date == today_local()},
+        {"item": item, "is_today": on_date == today_value, "today": today_value},
     )

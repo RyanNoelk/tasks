@@ -1,37 +1,27 @@
 import os
-from contextvars import ContextVar
 from datetime import date, datetime
 from zoneinfo import ZoneInfo, ZoneInfoNotFoundError
 
 
-# Per-request override set by middleware from the browser's `tz` cookie.
-_tz_var: ContextVar[str | None] = ContextVar("tz_name", default=None)
-
-
-def set_request_tz(name: str | None) -> None:
-    """Set the IANA timezone name for the current request context."""
-    _tz_var.set(name)
-
-
-def local_zone() -> ZoneInfo:
-    """Return the active local zone.
-
-    Resolution order: per-request cookie override → `TZ` env var → UTC.
-    """
-    candidates = (_tz_var.get(), os.environ.get("TZ"))
-    for name in candidates:
-        if not name:
+def _resolve_zone(name: str | None) -> ZoneInfo:
+    """First valid zone wins: explicit name → TZ env → UTC."""
+    for candidate in (name, os.environ.get("TZ")):
+        if not candidate:
             continue
         try:
-            return ZoneInfo(name)
+            return ZoneInfo(candidate)
         except (ZoneInfoNotFoundError, ValueError):
             continue
     return ZoneInfo("UTC")
+
+
+def local_zone(tz_name: str | None = None) -> ZoneInfo:
+    return _resolve_zone(tz_name)
 
 
 # Backward-compat alias
 _local_zone = local_zone
 
 
-def today() -> date:
-    return datetime.now(local_zone()).date()
+def today(tz_name: str | None = None) -> date:
+    return datetime.now(_resolve_zone(tz_name)).date()

@@ -1,6 +1,6 @@
 from datetime import date as date_cls
 
-from fastapi import APIRouter, Depends, Form, HTTPException, Request
+from fastapi import APIRouter, Cookie, Depends, Form, HTTPException, Request
 from fastapi.responses import HTMLResponse, Response
 from sqlalchemy.orm import Session
 
@@ -18,6 +18,7 @@ def create(
     name: str = Form(...),
     due_date: str | None = Form(default=None),
     session: Session = Depends(get_session),
+    tz: str | None = Cookie(default=None),
 ):
     name = name.strip()
     if not name:
@@ -37,7 +38,7 @@ def create(
     return templates.TemplateResponse(
         request,
         "partials/one_off_row.html",
-        {"task": task, "view": "today"},
+        {"task": task, "view": "today", "today": today_local(tz)},
     )
 
 

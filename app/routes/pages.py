@@ -1,6 +1,6 @@
 from datetime import date as date_cls, timedelta
 
-from fastapi import APIRouter, Depends, HTTPException, Request
+from fastapi import APIRouter, Cookie, Depends, HTTPException, Request
 from fastapi.responses import HTMLResponse
 from sqlalchemy.orm import Session
 
@@ -13,13 +13,18 @@ from app.templating import templates
 router = APIRouter()
 
 
+def get_today(tz: str | None = Cookie(default=None)) -> date_cls:
+    """Return user's local today, derived from the `tz` cookie set by the browser."""
+    return today_local(tz)
+
+
 @router.get("/", response_class=HTMLResponse)
 def index(
     request: Request,
     page: int = 1,
     session: Session = Depends(get_session),
+    on_date: date_cls = Depends(get_today),
 ) -> HTMLResponse:
-    on_date = today_local()
     items = services.checklist_for(session, on_date, include_inactive=False)
     one_offs = services.list_pending_one_offs(session, page=page)
     due_now = [t for t in one_offs.items if t.due_date and t.due_date <= on_date]
@@ -31,6 +36,7 @@ def index(
             "items": items,
             "on_date": on_date,
             "is_today": True,
+            "today": on_date,
             "one_offs": one_offs,
             "one_offs_due_now": due_now,
             "one_offs_later": later,
@@ -39,12 +45,20 @@ def index(
 
 
 @router.get("/manage", response_class=HTMLResponse)
-def manage(request: Request, session: Session = Depends(get_session)) -> HTMLResponse:
+def manage(
+    request: Request,
+    session: Session = Depends(get_session),
+    today_value: date_cls = Depends(get_today),
+) -> HTMLResponse:
     rows = services.list_all_templates(session)
     return templates.TemplateResponse(
         request,
         "manage.html",
-        {"rows": rows, "form_state": FormState(anchor_date=today_local())},
+        {
+            "rows": rows,
+            "form_state": FormState(anchor_date=today_value),
+            "today": today_value,
+        },
     )
 
 
@@ -53,9 +67,10 @@ def history(
     request: Request,
     date: str | None = None,
     session: Session = Depends(get_session),
+    today_value: date_cls = Depends(get_today),
 ) -> HTMLResponse:
     if date is None:
-        on_date = today_local()
+        on_date = today_value
     else:
         try:
             on_date = date_cls.fromisoformat(date)
@@ -63,16 +78,16 @@ def history(
             raise HTTPException(status_code=400, detail="invalid date, expected YYYY-MM-DD") from exc
 
     items = services.checklist_for(session, on_date, include_inactive=True)
-    today = today_local()
     prev_date = on_date - timedelta(days=1)
-    next_date = on_date + timedelta(days=1) if on_date < today else None
+    next_date = on_date + timedelta(days=1) if on_date < today_value else None
     return templates.TemplateResponse(
         request,
         "history.html",
         {
             "items": items,
             "on_date": on_date,
-            "is_today": on_date == today,
+            "is_today": on_date == today_value,
+            "today": today_value,
             "prev_date": prev_date,
             "next_date": next_date,
         },
@@ -85,12 +100,13 @@ def one_off_history(
     q: str | None = None,
     page: int = 1,
     session: Session = Depends(get_session),
+    today_value: date_cls = Depends(get_today),
 ) -> HTMLResponse:
     tasks = services.list_completed_one_offs(session, q=q, page=page)
     return templates.TemplateResponse(
         request,
         "one_off_history.html",
-        {"tasks": tasks, "q": q or ""},
+        {"tasks": tasks, "q": q or "", "today": today_value},
     )
 
 
