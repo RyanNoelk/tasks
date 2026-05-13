@@ -42,30 +42,27 @@ def create(
     )
 
 
-@router.post("/{task_id}/complete", response_class=HTMLResponse)
+@router.post("/{task_id}/complete", response_model=None)
 def complete(
-    request: Request,
     task_id: int,
     session: Session = Depends(get_session),
 ) -> Response:
     task = services.complete_one_off(session, task_id)
     if task is None:
         raise HTTPException(status_code=404, detail="task not found")
-    # Empty body + outerHTML swap removes the row from Today.
-    return Response(status_code=200)
+    # Full refresh so the row leaves Today, bucket re-sorts, and counts update.
+    return Response(status_code=204, headers={"HX-Refresh": "true"})
 
 
-@router.post("/{task_id}/restore", response_class=HTMLResponse)
+@router.post("/{task_id}/restore", response_model=None)
 def restore(
-    request: Request,
     task_id: int,
     session: Session = Depends(get_session),
 ) -> Response:
     task = services.restore_one_off(session, task_id)
     if task is None:
         raise HTTPException(status_code=404, detail="task not found")
-    # Removed from history list once restored.
-    return Response(status_code=200)
+    return Response(status_code=204, headers={"HX-Refresh": "true"})
 
 
 @router.delete("/{task_id}")

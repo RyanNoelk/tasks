@@ -1,29 +1,26 @@
 from datetime import date as date_cls
 
-from fastapi import APIRouter, Cookie, Depends, HTTPException, Request
-from fastapi.responses import HTMLResponse
+from fastapi import APIRouter, Cookie, Depends, HTTPException
+from fastapi.responses import Response
 from sqlalchemy.orm import Session
 
 from app import services
 from app.db import get_session
 from app.time import today as today_local
-from app.templating import templates
 
 router = APIRouter(prefix="/tasks")
 
 
-@router.post("/{template_id}/toggle", response_class=HTMLResponse)
+@router.post("/{template_id}/toggle", response_model=None)
 def toggle(
-    request: Request,
     template_id: int,
     date: str | None = None,
     session: Session = Depends(get_session),
     tz: str | None = Cookie(default=None),
-) -> HTMLResponse:
+):
     today_value = today_local(tz)
-    if date is None:
-        on_date = today_value
-    else:
+    on_date = today_value
+    if date is not None:
         try:
             on_date = date_cls.fromisoformat(date)
         except ValueError as exc:
@@ -33,8 +30,6 @@ def toggle(
     if item is None:
         raise HTTPException(status_code=404, detail="template not found")
 
-    return templates.TemplateResponse(
-        request,
-        "partials/task_row.html",
-        {"item": item, "is_today": on_date == today_value, "today": today_value},
-    )
+    # Full refresh so completed tasks reorder to bottom and times render in
+    # the user's local TZ from the next render pass.
+    return Response(status_code=204, headers={"HX-Refresh": "true"})
