@@ -11,9 +11,16 @@ set -e
 CMD="${1:-upgrade}"
 ARG="${2}"
 
+# Use run (not exec) so this works even when the container is stopped/restarting.
+# --rm cleans up the one-off container afterwards.
+# --no-deps skips starting dependency services.
+alembic_run() {
+    docker compose run --rm --no-deps tasks alembic "$@"
+}
+
 case "$CMD" in
     upgrade)
-        docker compose exec tasks alembic upgrade "${ARG:-head}"
+        alembic_run upgrade "${ARG:-head}"
         ;;
     downgrade)
         if [ -z "$ARG" ]; then
@@ -25,16 +32,16 @@ case "$CMD" in
             echo "  $0 downgrade 0003      # specific revision"
             exit 1
         fi
-        docker compose exec tasks alembic downgrade "$ARG"
+        alembic_run downgrade "$ARG"
         ;;
     current)
-        docker compose exec tasks alembic current
+        alembic_run current
         ;;
     history)
-        docker compose exec tasks alembic history --verbose
+        alembic_run history --verbose
         ;;
     heads)
-        docker compose exec tasks alembic heads
+        alembic_run heads
         ;;
     *)
         echo "Unknown command: $CMD"
